@@ -8,8 +8,6 @@ stdout.write('Введите текст: ');
 const flag = 'exit\r\n';
 
 stdin.on('data', data => {
-  console.log(Buffer.from(flag));
-  console.log(Buffer.from(data));
   if (data.toString() === flag) {
     process.exit();
   } else {
