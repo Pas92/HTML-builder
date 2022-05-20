@@ -5,10 +5,10 @@ const output = fs.createWriteStream(path.join(__dirname, 'stream-file.txt'));
 
 stdout.write('Введите текст: ');
 
-const flag = 'exit\r\n';
+const flag = 'exit';
 
 stdin.on('data', data => {
-  if (data.toString() === flag) {
+  if (data.toString().trim() === flag) {
     process.exit();
   } else {
     output.write(data);
@@ -18,8 +18,6 @@ stdin.on('data', data => {
 
 process.on('exit', () => stdout.write('Ввод данных завершен'));
 process.on('SIGINT', () => {
-  stdout.write('\r\n');
+  stdout.write('\n');
   process.exit();
 });
-
-
