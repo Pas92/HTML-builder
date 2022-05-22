@@ -20,8 +20,8 @@ const deleteFiles = async (folderName) => {
     for (let file of files) {
       if(file.isFile()) {
         let target = file.name;
-        console.log(`Файл ${target} успешно удален из папки ${folderName
-        }`);
+        // console.log(`Файл ${target} успешно удален из папки ${folderName
+        // }`);
         fsPromises.unlink(path.join(folderName, target));
       } else {
         let target = file.name;
@@ -42,8 +42,8 @@ const copyFiles = async (sourceFolder, targetFolder) => {
         let target = file.name;
         try {
           await fsPromises.copyFile(path.join(sourceFolder, target.toString()), path.join(targetFolder, target.toString()));
-          console.log(`Файл ${target} успешно скопирован из папки ${sourceFolder
-          } в папку ${targetFolder}`);
+          // console.log(`Файл ${target} успешно скопирован из папки ${sourceFolder
+          // } в папку ${targetFolder}`);
         } catch (error) {
           console.log(error);
         }
@@ -89,13 +89,60 @@ const createCSSBundle = async (sourcePath, targetPath, bundleName, bundleExtensi
   }
 };
 
+const getData = async (filePath) => {
+  const stream = fs.createReadStream(filePath, 'utf-8');
+  let data = '';
+
+  for await (const chunk of stream) {
+    data = `${data}${chunk}`;
+  }
+  return data;
+};
+
+const getHTMLComponents = async (folder) => {
+  const files = await fsPromises.readdir(folder, { withFileTypes: true });
+  const components = {};
+  for (let file of files) {
+    let target = path.join(folder, file.name);
+    const component = await getData(target);
+    components[file.name.split('.').splice(-0, 1).join('.')] = component;
+  }
+  return components;
+};
+
+const createHTMLBundle = async (folder, components) => {
+  const output = fs.createWriteStream(path.join(folder, 'index.html'));
+
+  const stream = fs.createReadStream(path.join(__dirname, 'template.html'), 'utf-8');
+  let data = '';
+
+  const componentsKeys = Object.keys(components);
+
+  for await (const chunk of stream) {
+    data = `${data}${chunk}`;
+    for (let key of componentsKeys) {
+      if (chunk.includes(`{{${key}}}`)) {
+
+        data = data.replace(`{{${key}}}`, `${components[key]}`);
+      }
+    }
+  }
+
+  output.write(data);
+};
+
 const buildProject = async () => {
   const buildFolder = path.join(__dirname, 'project-dist');
   await createFolder(buildFolder);
+  await deleteFiles(buildFolder);
   await copyAssets(buildFolder);
 
   const sourceCSSFolder = path.join(__dirname, 'styles');
   await createCSSBundle(sourceCSSFolder, buildFolder, 'style', 'css');
+
+  const sourceHTMLFolder = path.join(__dirname, 'components');
+  const HTMLComponents = await getHTMLComponents(sourceHTMLFolder);
+  await createHTMLBundle(buildFolder, HTMLComponents);
 };
 
 buildProject();
