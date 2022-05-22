@@ -19,7 +19,13 @@ const deleteFiles = async (folderName) => {
     for (let file of files) {
       if(file.isFile()) {
         let target = file.name;
+        console.log(`Файл ${target} успешно удален из папки ${folderName
+        }`);
         fsPromises.unlink(path.join(folderName, target));
+      } else {
+        let target = file.name;
+        const newTarget = path.join(folderName, target.toString());
+        deleteFiles(newTarget);
       }
     }
   } catch (error) {
@@ -44,7 +50,6 @@ const copyFiles = async (sourceFolder, targetFolder) => {
         let target = file.name;
         const newSource = path.join(sourceFolder, target.toString());
         const newTarget = path.join(targetFolder, target.toString());
-        console.log(newTarget);
         await createFolder(newTarget);
         await copyFiles(newSource, newTarget);
       }
@@ -62,6 +67,8 @@ const copyAssets = async (targetFolder) => {
   await deleteFiles(assetsFolder);
   await copyFiles(sourceFolder, assetsFolder);
 };
+
+
 
 const buildProject = async () => {
   const buildFolder = path.join(__dirname, 'project-dist');
