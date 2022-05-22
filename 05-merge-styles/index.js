@@ -5,14 +5,14 @@ const fsPromises = require('fs/promises');
 const folderPath = path.join(__dirname, 'styles');
 const targetFolder = path.join(__dirname, 'project-dist');
 
-const createBundle = async (source, bundleName, bundleExtension) => {
+const createBundle = async (sourcePath, targetPath, bundleName, bundleExtension) => {
   try {
-    const files = await fsPromises.readdir(source);
-    const output = fs.createWriteStream(path.join(targetFolder, `${bundleName}.${bundleExtension}`));
-    for(file of files) {
-      let target = file
+    const files = await fsPromises.readdir(sourcePath);
+    const output = fs.createWriteStream(path.join(targetPath, `${bundleName}.${bundleExtension}`));
+    for(let file of files) {
+      let target = file;
       if(path.extname(target) === `.${bundleExtension}`) {
-        const stream = fs.createReadStream(path.join(folderPath, target.toString()), 'utf-8');
+        const stream = fs.createReadStream(path.join(sourcePath, target.toString()), 'utf-8');
         let data = '';
         stream.on('data', chunk => data += chunk);
         stream.on('end', () => {
@@ -21,8 +21,8 @@ const createBundle = async (source, bundleName, bundleExtension) => {
       }
     }
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
-}
+};
 
-createBundle(folderPath, 'bundle', 'css')
+createBundle(folderPath, targetFolder, 'bundle', 'css');
