@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const fsPromises = require('fs/promises');
 
 
@@ -68,12 +69,33 @@ const copyAssets = async (targetFolder) => {
   await copyFiles(sourceFolder, assetsFolder);
 };
 
-
+const createCSSBundle = async (sourcePath, targetPath, bundleName, bundleExtension) => {
+  try {
+    const files = await fsPromises.readdir(sourcePath);
+    const output = fs.createWriteStream(path.join(targetPath, `${bundleName}.${bundleExtension}`));
+    for (let file of files) {
+      let target = file;
+      if (path.extname(target) === `.${bundleExtension}`) {
+        const stream = fs.createReadStream(path.join(sourcePath, target.toString()), 'utf-8');
+        let data = '';
+        stream.on('data', chunk => data += chunk);
+        stream.on('end', () => {
+          output.write(data);
+        });
+      }
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 const buildProject = async () => {
   const buildFolder = path.join(__dirname, 'project-dist');
   await createFolder(buildFolder);
   await copyAssets(buildFolder);
+
+  const sourceCSSFolder = path.join(__dirname, 'styles');
+  await createCSSBundle(sourceCSSFolder, buildFolder, 'style', 'css');
 };
 
 buildProject();
